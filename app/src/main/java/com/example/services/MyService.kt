@@ -14,7 +14,6 @@ class MyService : Service() {
     private val handler = Handler()
 
     private val downloadBooks = DATA_DOWNLOADED()
-    p
 
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -33,12 +32,12 @@ class MyService : Service() {
             val mostCommon = numByWord.maxByOrNull { it.value }?.key ?: ""
 
 
-            val bookInfo : BookInfo = BookInfo(
+            val bookInfo  = BookInfo(
                     pair.key,
                     pair.value.count { it == ' ' },
                     pair.value.count(),
                     mostCommon)
-
+            Log.d("MyService ----->","${bookInfo.title}, ${bookInfo.wordCount}, ${bookInfo.charCount}, ${bookInfo.mostCommonWord} ")
 
 
             Log.d("MyService ----->","end")

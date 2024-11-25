@@ -17,9 +17,6 @@ class MyBroadcastReceiver(private val onDataReceived: (BookInfo) ->Unit) : Broad
                 mostCommonWord = p1.getStringExtra("COMMON_WORD") ?: " "
             )
 
-
-
-
             if (bookInfo != null){
                 onDataReceived(bookInfo)
             }
