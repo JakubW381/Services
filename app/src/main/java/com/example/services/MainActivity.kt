@@ -8,7 +8,9 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -40,12 +42,14 @@ class MainActivity : ComponentActivity() {
     @Composable
     fun ReceiverUI(){
         val context = this
-        var someData by remember { mutableStateOf(emptyList<String>()) }
+        var someData by remember { mutableStateOf(emptyList<BookInfo>()) }
         val myServiceIntent = Intent(context,MyService::class.java)
 
         DisposableEffect(Unit) {
-            val receiver = MyBroadcastReceiver{ newData ->
-                someData = newData
+            val receiver = MyBroadcastReceiver{ bookInfo ->
+                if (!(someData.contains(bookInfo))){
+                    someData.plus(bookInfo)
+                }
             }
             val  intentFilter = IntentFilter("com.example.services.DATA_DOWNLOADED")
 
@@ -68,8 +72,21 @@ class MainActivity : ComponentActivity() {
                 Text("Start download service")
             }
             LazyColumn (modifier = Modifier.fillMaxSize()){
+
+                Row (Modifier.fillMaxWidth()){
+                    Text("title")
+                    Text("word Count")
+                    Text("char count")
+                    Text("most common")
+                }
+
                 items(someData) { item ->
-                    Text(item, modifier = Modifier.padding(16.dp))
+                    Row (Modifier.fillMaxWidth()){
+                        Text(item.title)
+                        Text("$item.wordCount")
+                        Text("$item.charCount")
+                        Text(item.mostCommonWord)
+                    }
                 }
             }
         }
