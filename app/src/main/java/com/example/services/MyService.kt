@@ -1,12 +1,28 @@
 package com.example.services
 
+import android.app.Notification
+import android.app.NotificationChannel
+import android.app.NotificationManager
 import android.app.Service
+import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Handler
 import android.os.IBinder
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.annotation.RequiresPermission
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import java.util.ArrayList
+import java.util.jar.Manifest
 import kotlin.random.Random
 
 
@@ -21,6 +37,7 @@ class MyService : Service() {
         download()
         return START_STICKY
     }
+
     private fun download(){
             val pair = downloadBooks.books.entries.elementAt(Random.nextInt(downloadBooks.books.size))
 
@@ -42,7 +59,7 @@ class MyService : Service() {
 
             Log.d("MyService ----->","end")
             val broadcastIntent = Intent("com.example.services.DATA_DOWNLOADED")
-            //broadcastIntent.putExtra("DATA_LIST", ArrayList(data))
+
 
 
             broadcastIntent.putExtra("TITLE", bookInfo.title)
@@ -64,6 +81,4 @@ class MyService : Service() {
         handler.removeCallbacksAndMessages(null)
         Log.d("MyService ----->","onDestroy()")
     }
-
-
 }

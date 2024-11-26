@@ -1,5 +1,8 @@
 package com.example.services
 
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Build
@@ -37,11 +40,21 @@ import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import com.example.services.ui.theme.ServicesTheme
+import android.Manifest
+import android.content.pm.PackageManager
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresPermission
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        createNotificationChannel()
         enableEdgeToEdge()
         setContent {
             ServicesTheme {
@@ -52,14 +65,46 @@ class MainActivity : ComponentActivity() {
 
     @Composable
     fun ReceiverUI(){
+
         val context = this
         var someData by remember { mutableStateOf(emptyList<BookInfo>()) }
         val myServiceIntent = Intent(context,MyService::class.java)
+
+        var permission by remember { mutableStateOf(checkNotificationPermission()) }
+        val requestPermissionLauncher = rememberLauncherForActivityResult(
+            ActivityResultContracts.RequestPermission()
+        ) { isGranted ->
+            permission  = isGranted;
+            if(!isGranted){
+                Toast.makeText(
+                    this,
+                    "Brak zezwolenia na powiadomienia",
+                    Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+
+        @RequiresPermission
+        fun sendNotification(bookInfo: BookInfo){
+            val builder = NotificationCompat.Builder(this,"default_channel")
+                .setContentTitle("Downloaded")
+                .setContentText("${bookInfo.title}")
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setSmallIcon(R.drawable.downloads)
+            with(NotificationManagerCompat.from(this)){
+                notify(1,builder.build())
+            }
+        }
 
         DisposableEffect(Unit) {
             val receiver = MyBroadcastReceiver{ bookInfo ->
                 if (!(someData.contains(bookInfo))){
                     someData = someData.plus(bookInfo)
+                    if (permission){
+                        sendNotification(bookInfo)
+                    }else{
+                        requestPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+                    }
                 }
             }
             val  intentFilter = IntentFilter("com.example.services.DATA_DOWNLOADED")
@@ -78,7 +123,10 @@ class MainActivity : ComponentActivity() {
 
         Column (modifier = Modifier.fillMaxSize().padding(5.dp,40.dp)){
             Button(
-                onClick = {context.startService(myServiceIntent)}
+                onClick = {
+                    context.startService(myServiceIntent)
+
+                }
             ) {
                 Text("Start download service")
             }
@@ -99,8 +147,29 @@ class MainActivity : ComponentActivity() {
                     }
                 }
             }
-
         }
 
+    }
+
+    private fun createNotificationChannel(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O){
+            val name = "Download Notification"
+            val descriptionText = "Download Notification Channel"
+            val importance = NotificationManager.IMPORTANCE_HIGH
+            val channel = NotificationChannel("default_channel",name,importance).apply {
+                description = descriptionText
+            }
+            val notificationManager : NotificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
+    private fun checkNotificationPermission() : Boolean{
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU){
+            ContextCompat.checkSelfPermission(this,
+                Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
+
+        }else{
+            true
+        }
     }
 }
