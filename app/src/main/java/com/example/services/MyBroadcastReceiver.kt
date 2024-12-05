@@ -10,7 +10,7 @@ class MyBroadcastReceiver(private val onDataReceived: (BookInfo) ->Unit) : Broad
         if (p1?.action == "com.example.services.DATA_DOWNLOADED"){
             Log.d("MyBroadcastReceiver", "Data downloaded")
 
-            val bookInfo: BookInfo = BookInfo(
+            val bookInfo = BookInfo(
                 title = p1.getStringExtra("TITLE") ?: " ",
                 wordCount = p1.getIntExtra("WORD_COUNT",0),
                 charCount = p1.getIntExtra("CHAR_COUNT",0),
